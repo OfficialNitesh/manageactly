@@ -14,7 +14,7 @@ interface ButtonBaseProps {
   icon?: ReactNode;
   iconPosition?: "left" | "right";
   className?: string;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 interface ButtonAsButtonProps
