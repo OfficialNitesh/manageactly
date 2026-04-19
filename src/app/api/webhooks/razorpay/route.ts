@@ -185,7 +185,7 @@ async function auditLog(
       actorId: null, // system event
       action,
       entity: "Subscription",
-      metadata,
+      metadata: metadata as any,
     },
   });
 }
