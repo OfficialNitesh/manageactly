@@ -75,7 +75,10 @@ export const tokens = {
 
 /** Navigation links */
 export const navLinks = [
-  { label: "Services", href: "/solutions" },
+  export const navLinks: { label: string; href: string }[] = [
+  { label: "Solutions", href: "/solutions" },
+  ...
+],
   { label: "How It Works", href: "/methodology" },
   { label: "Our Work", href: "/case-studies" },
   { label: "Pricing", href: "/pricing" },
