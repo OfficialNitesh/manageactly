@@ -36,7 +36,7 @@ export default function ContactFormClient() {
       setStatus("success");
     } catch {
       setStatus("error");
-      setError("Something went wrong. Please email us at hello@manageactly.com");
+      setError("Something went wrong. Please email us at realofficialcreator@gmail.com");
     }
   };
 

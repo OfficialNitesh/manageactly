@@ -217,7 +217,7 @@ export default function PricingClient() {
             setShowForm(false);
             window.scrollTo({ top: 0, behavior: "smooth" });
           } else {
-            setError(`Payment received (ID: ${response.razorpay_payment_id}) but verification failed. Please email hello@manageactly.com with this ID.`);
+            setError(`Payment received (ID: ${response.razorpay_payment_id}) but verification failed. Please email realofficialcreator@gmail.com with this ID.`);
           }
         },
         modal: { ondismiss: () => setLoading(null) },

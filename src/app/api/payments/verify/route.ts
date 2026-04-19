@@ -127,7 +127,7 @@ async function sendPaymentConfirmation(d: z.infer<typeof schema>) {
           Our team will contact you within <strong>24 hours</strong> to schedule the onboarding call and get started.
         </p>
         <p style="color:#555;line-height:1.7;">
-          Any questions? Reply to this email or write to <a href="mailto:hello@manageactly.com" style="color:#2a9d8f;">hello@manageactly.com</a>
+          Any questions? Reply to this email or write to <a href="mailto:realofficialcreator@gmail.com" style="color:#2a9d8f;">realofficialcreator@gmail.com</a>
         </p>
         <p style="color:#555;margin-top:28px;">Warm regards,<br><strong>Manage Actly Team</strong></p>
       </div>

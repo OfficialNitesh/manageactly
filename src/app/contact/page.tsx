@@ -10,8 +10,8 @@ export const metadata: Metadata = genMeta({
 });
 
 const contactInfo = [
-  { label: "Email", value: "hello@manageactly.com", href: "mailto:hello@manageactly.com" },
-  { label: "WhatsApp", value: "+91 00000 00000", href: "https://wa.me/910000000000" },
+  { label: "Email", value: "realofficialcreator@gmail.com", href: "mailto:realofficialcreator@gmail.com" },
+  { label: "WhatsApp", value: "+91 817811 4219", href: "https://wa.me/918178114219" },
   { label: "Careers", value: "careers@manageactly.com", href: "mailto:careers@manageactly.com" },
 ];
 
