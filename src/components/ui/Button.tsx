@@ -89,12 +89,12 @@ export default function Button(props: ButtonProps) {
     props as ButtonAsButtonProps;
 
   return (
-    <motion.button
-      whileTap={{ scale: 0.98 }}
-      className={baseClass}
-      {...buttonProps}
-    >
-      {content}
-    </motion.button>
+   <motion.button
+  whileTap={{ scale: 0.98 }}
+  className={baseClass}
+  {...(buttonProps as any)}
+>
+  {content}
+</motion.button>
   );
 }
