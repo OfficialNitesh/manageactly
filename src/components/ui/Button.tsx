@@ -17,12 +17,12 @@ interface ButtonBaseProps {
   children?: ReactNode;
 }
 
-interface ButtonAsButtonProps
-  extends ButtonBaseProps,
-    ButtonHTMLAttributes<HTMLButtonElement> {
-  as?: "button";
-  href?: never;
-}
+type ButtonAsButtonProps =
+  ButtonBaseProps &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
+    as?: "button";
+    href?: never;
+  };
 
 interface ButtonAsLinkProps extends ButtonBaseProps {
   as: "link";
@@ -77,6 +77,7 @@ export default function Button(props: ButtonProps) {
     const externalProps = props.external
       ? { target: "_blank", rel: "noopener noreferrer" }
       : {};
+
     return (
       <Link href={props.href} className={baseClass} {...externalProps}>
         {content}
@@ -84,13 +85,14 @@ export default function Button(props: ButtonProps) {
     );
   }
 
-  const { as: _as, href: _href, ...buttonProps } = props as ButtonAsButtonProps & { href?: string };
+  const { as: _as, href: _href, ...buttonProps } =
+    props as ButtonAsButtonProps;
 
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
       className={baseClass}
-      {...(buttonProps as ButtonHTMLAttributes<HTMLButtonElement>)}
+      {...buttonProps}
     >
       {content}
     </motion.button>
