@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design Tokens (CSS Variables) ─────────────────────────── */
+:root {
+  /* Color tokens */
+  --color-ink: #0e1a3d;
+  --color-ink-muted: #364151;
+  --color-ink-subtle: #7a8696;
+  --color-bg: #ffffff;
+  --color-bg-muted: #f5f7fa;
+  --color-bg-dark: #0e1a3d;
+  --color-accent: #2a9d8f;
+  --color-accent-light: #3db8a9;
+  --color-border: #e4e6ea;
+  --color-border-dark: #253a6e;
+
+  /* Typography */
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Transitions */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-base: 300ms;
+  --duration-slow: 600ms;
+}
+
+/* ─── Base Styles ─────────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply text-charcoal-800 bg-paper font-body;
+    font-size: 1rem;
+    line-height: 1.625;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-ink tracking-tight;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  h1 { @apply text-5xl md:text-6xl lg:text-7xl; }
+  h2 { @apply text-4xl md:text-5xl; }
+  h3 { @apply text-2xl md:text-3xl; }
+  h4 { @apply text-xl md:text-2xl; }
+
+  p { @apply text-charcoal-700 leading-relaxed; }
+
+  a {
+    @apply transition-colors duration-200;
+  }
+
+  ::selection {
+    background: rgba(42, 157, 143, 0.2);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-teal-accent;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-charcoal-200 rounded-full;
+  }
+}
+
+/* ─── Layout Utilities ────────────────────────────────────────── */
+@layer components {
+  .container-grid {
+    @apply mx-auto max-w-container px-6 md:px-8 lg:px-12;
+  }
+
+  .grid-12 {
+    @apply grid grid-cols-1 md:grid-cols-12 gap-6;
+  }
+
+  .section-padding {
+    @apply py-24 md:py-32;
+  }
+
+  .section-padding-sm {
+    @apply py-16 md:py-20;
+  }
+
+  /* Typography utilities */
+  .label {
+    @apply text-xs font-body font-semibold tracking-widest uppercase text-charcoal-400;
+  }
+
+  .prose-display {
+    @apply font-display text-ink;
+  }
+
+  /* Card component */
+  .card {
+    @apply bg-paper rounded-2xl border border-charcoal-100 p-8
+           transition-all duration-300 ease-out hover:shadow-card-hover hover:-translate-y-1;
+    box-shadow: var(--shadow-card, 0 1px 3px rgba(14,26,61,0.06), 0 4px 16px rgba(14,26,61,0.08));
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-ink text-paper px-7 py-3.5 rounded-full
+           text-sm font-body font-semibold tracking-wide
+           transition-all duration-200 ease-out
+           hover:bg-navy-800 hover:shadow-lg hover:-translate-y-px
+           focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+           border border-charcoal-300 text-charcoal-800 px-7 py-3.5 rounded-full
+           text-sm font-body font-semibold tracking-wide bg-transparent
+           transition-all duration-200 ease-out
+           hover:border-ink hover:text-ink hover:bg-charcoal-50
+           focus-visible:ring-2 focus-visible:ring-charcoal-400 focus-visible:ring-offset-2;
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2
+           bg-teal-accent text-paper px-7 py-3.5 rounded-full
+           text-sm font-body font-semibold tracking-wide
+           transition-all duration-200 ease-out
+           hover:bg-teal-dark hover:shadow-lg hover:-translate-y-px
+           focus-visible:ring-2 focus-visible:ring-teal-accent focus-visible:ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2
+           text-charcoal-600 px-4 py-2 rounded-lg
+           text-sm font-body font-medium
+           transition-all duration-200 ease-out
+           hover:text-ink hover:bg-charcoal-50;
+  }
+
+  /* Form inputs */
+  .form-input {
+    @apply w-full px-4 py-3 rounded-xl border border-charcoal-200 bg-mist
+           text-ink placeholder:text-charcoal-400
+           text-sm font-body
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-teal-accent focus:border-transparent;
+  }
+
+  .form-label {
+    @apply block text-sm font-semibold text-charcoal-700 mb-1.5;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-charcoal-100;
+  }
+
+  /* Stat display */
+  .stat-number {
+    @apply font-display text-4xl md:text-5xl text-ink font-bold tracking-tight;
+  }
+
+  /* Nav link */
+  .nav-link {
+    @apply text-sm font-body font-medium text-charcoal-600
+           transition-colors duration-200
+           hover:text-ink
+           relative after:absolute after:bottom-0 after:left-0
+           after:w-0 after:h-px after:bg-teal-accent
+           after:transition-all after:duration-300
+           hover:after:w-full;
+  }
+
+  .nav-link-active {
+    @apply text-ink after:w-full;
+  }
+}
+
+/* ─── Dark Section Overrides ──────────────────────────────────── */
+.section-dark {
+  @apply bg-navy-950 text-paper;
+}
+
+.section-dark h1,
+.section-dark h2,
+.section-dark h3,
+.section-dark h4 {
+  @apply text-paper;
+}
+
+.section-dark p {
+  @apply text-navy-200;
+}
+
+.section-dark .label {
+  @apply text-navy-300;
+}
+
+.section-muted {
+  @apply bg-mist;
+}
+
+/* ─── Animations ──────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── Print ───────────────────────────────────────────────────── */
+@media print {
+  nav, footer, .no-print { display: none; }
+  body { font-size: 12pt; }
+}
