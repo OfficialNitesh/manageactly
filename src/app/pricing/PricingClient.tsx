@@ -3,58 +3,46 @@
 import { useState } from "react";
 import Link from "next/link";
 
-declare global {
-  interface Window {
-    Razorpay: new (options: RazorpayOptions) => { open(): void };
-  }
-}
+// ─── Your UPI details ────────────────────────────────────────────────────────
+const UPI_ID = "nitesshh@axl";
+const UPI_NAME = "Manage Actly";
+// QR code: generated from your UPI ID using a free service
+// This URL generates a QR on the fly — works immediately, no setup needed
+const getQrUrl = (amount: number, note: string) =>
+  `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+    `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`
+  )}`;
 
-interface RazorpayOptions {
-  key: string;
-  order_id: string;
-  amount: number;
-  currency: string;
-  name: string;
-  description: string;
-  image?: string;
-  prefill?: { name?: string; email?: string; contact?: string };
-  theme?: { color?: string };
-  // UPI + payment method config
-  method?: {
-    upi?: boolean;
-    card?: boolean;
-    netbanking?: boolean;
-    wallet?: boolean;
-    emi?: boolean;
-  };
-  config?: {
-    display?: {
-      blocks?: {
-        upi?: { name: string; instruments: { method: string; flows?: string[] }[] };
-        other?: { name: string; instruments: { method: string }[] };
-      };
-      sequence?: string[];
-      preferences?: { show_default_blocks?: boolean };
-    };
-  };
-  handler?: (response: {
-    razorpay_payment_id: string;
-    razorpay_order_id: string;
-    razorpay_signature: string;
-  }) => void;
-  modal?: { ondismiss?: () => void };
-}
-
+// ─── Plans ───────────────────────────────────────────────────────────────────
 const plans = [
   {
-    id: "FOUNDATION",
+    id: "PILOT" as const,
+    label: "PILOT",
+    priceDisplay: "₹2,000 – ₹5,000",
+    amount: 2000,
+    period: "one-time",
+    for: "First step for everyone",
+    highlight: false,
+    badge: "Start Here",
+    isPilot: true,
+    description: "7 to 10 day paid pilot. See results before committing to a monthly plan.",
+    features: [
+      "Full profile audit across platforms",
+      "3 to 5 published posts",
+      "Visual brand setup and templates",
+      "Zero long-term commitment",
+    ],
+  },
+  {
+    id: "FOUNDATION" as const,
     label: "FOUNDATION",
-    price: "₹10,000",
-    priceRange: "₹10K–₹15K",
+    priceDisplay: "₹10,000 – ₹15,000",
+    amount: 10000,
     period: "per month",
     for: "Startups · Clinics · Founders",
     highlight: false,
     badge: null,
+    isPilot: false,
     description: "Establish your social presence with consistent content and community basics.",
     features: [
       "3 platforms managed (Instagram, Facebook, YouTube)",
@@ -66,14 +54,15 @@ const plans = [
     ],
   },
   {
-    id: "GROWTH",
+    id: "GROWTH" as const,
     label: "GROWTH",
-    price: "₹20,000",
-    priceRange: "₹20K–₹35K",
+    priceDisplay: "₹20,000 – ₹35,000",
+    amount: 20000,
     period: "per month",
     for: "Mid-size B2B · Scaling Brands",
     highlight: true,
     badge: "Most Popular",
+    isPilot: false,
     description: "Full-service management for brands ready to scale with Reels and active engagement.",
     features: [
       "3 to 4 platforms managed",
@@ -81,18 +70,19 @@ const plans = [
       "Active daily community engagement",
       "Bi-weekly strategy calls",
       "Advanced analytics reporting",
-      "30-day content calendar proactive planning",
+      "30-day content calendar planned in advance",
     ],
   },
   {
-    id: "AUTHORITY",
+    id: "AUTHORITY" as const,
     label: "AUTHORITY",
-    price: "₹40,000",
-    priceRange: "₹40K–₹80K+",
+    priceDisplay: "₹40,000 – ₹80,000+",
+    amount: 40000,
     period: "per month",
     for: "Funded Startups · Enterprise · Luxury",
     highlight: false,
     badge: null,
+    isPilot: false,
     description: "Omnichannel dominance. Daily presence, custom shoots and executive reporting.",
     features: [
       "5 or more platforms managed",
@@ -105,152 +95,81 @@ const plans = [
   },
 ];
 
+type PlanId = "PILOT" | "FOUNDATION" | "GROWTH" | "AUTHORITY";
+type Step = "plans" | "upi" | "confirm" | "success";
+
 export default function PricingClient() {
-  const [loading, setLoading] = useState<string | null>(null);
-  const [successPlan, setSuccessPlan] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<Step>("plans");
+  const [selectedPlan, setSelectedPlan] = useState<(typeof plans)[0] | null>(null);
 
-  // Capture customer details before opening checkout
-  const [customerName, setCustomerName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  // Customer details
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [utr, setUtr] = useState("");
 
-  const loadRazorpay = (): Promise<boolean> =>
-    new Promise(resolve => {
-      if (typeof window !== "undefined" && window.Razorpay) { resolve(true); return; }
-      const s = document.createElement("script");
-      s.src = "https://checkout.razorpay.com/v1/checkout.js";
-      s.onload = () => resolve(true);
-      s.onerror = () => resolve(false);
-      document.body.appendChild(s);
-    });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const initiateCheckout = async (planId: string) => {
-    if (!customerEmail || !customerName) {
-      setError("Please fill in your name and email before proceeding.");
-      return;
-    }
+  const handleSelectPlan = (plan: (typeof plans)[0]) => {
+    setSelectedPlan(plan);
+    setStep("upi");
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
+  };
 
-    setLoading(planId);
-    setError(null);
+  const handleSubmitPayment = async () => {
+    if (!name.trim()) { setError("Please enter your name."); return; }
+    if (!email.trim()) { setError("Please enter your email."); return; }
+    if (!utr.trim()) { setError("Please enter the UTR or transaction ID from your UPI app."); return; }
+
+    setSubmitting(true);
+    setError("");
 
     try {
-      const loaded = await loadRazorpay();
-      if (!loaded) throw new Error("Payment system could not be loaded. Please refresh and try again.");
-
-      // Create order
-      const res = await fetch("/api/payments/order", {
+      const res = await fetch("/api/payments/upi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: planId }),
+        body: JSON.stringify({
+          plan: selectedPlan!.id,
+          customerName: name,
+          customerEmail: email,
+          customerPhone: phone,
+          utrNumber: utr,
+        }),
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({})) as { error?: string };
-        throw new Error(err.error ?? "Failed to create order");
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(data.error ?? "Submission failed. Please try again.");
       }
 
-      const { orderId, amount, currency, keyId, planLabel } = await res.json() as {
-        orderId: string;
-        amount: number;
-        currency: string;
-        keyId: string;
-        planLabel: string;
-      };
-
-      const rzp = new window.Razorpay({
-        key: keyId,
-        order_id: orderId,
-        amount,
-        currency,
-        name: "Manage Actly",
-        description: `${planLabel} — Social Media Management`,
-        theme: { color: "#2a9d8f" },
-        prefill: {
-          name: customerName,
-          email: customerEmail,
-          contact: customerPhone,
-        },
-        // Show UPI first, then cards/netbanking
-        config: {
-          display: {
-            blocks: {
-              upi: {
-                name: "Pay via UPI",
-                instruments: [
-                  { method: "upi", flows: ["qr", "intent", "collect"] },
-                ],
-              },
-              other: {
-                name: "Other Payment Methods",
-                instruments: [
-                  { method: "card" },
-                  { method: "netbanking" },
-                  { method: "wallet" },
-                ],
-              },
-            },
-            sequence: ["block.upi", "block.other"],
-            preferences: { show_default_blocks: false },
-          },
-        },
-        handler: async (response) => {
-          // Verify server-side
-          const verifyRes = await fetch("/api/payments/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              plan: planId,
-              customerName,
-              customerEmail,
-              customerPhone,
-            }),
-          });
-
-          if (verifyRes.ok) {
-            setSuccessPlan(planLabel);
-            setShowForm(false);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          } else {
-            setError(`Payment received (ID: ${response.razorpay_payment_id}) but verification failed. Please email realofficialcreator@gmail.com with this ID.`);
-          }
-        },
-        modal: { ondismiss: () => setLoading(null) },
-      });
-
-      rzp.open();
+      setStep("success");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
-      setLoading(null);
+      setSubmitting(false);
     }
   };
 
-  const handlePlanClick = (planId: string) => {
-    setSelectedPlan(planId);
-    setShowForm(true);
-    setError(null);
-    setTimeout(() => document.getElementById("checkout-form")?.scrollIntoView({ behavior: "smooth" }), 100);
-  };
-
-  if (successPlan) {
+  // ── Success screen ─────────────────────────────────────────────────────────
+  if (step === "success") {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-6">
-        <div className="max-w-md text-center">
+      <div className="min-h-screen bg-paper flex items-center justify-center px-6 pt-24">
+        <div className="max-w-md w-full text-center">
           <div className="w-20 h-20 bg-teal-accent/10 rounded-full flex items-center justify-center mx-auto mb-8">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2a9d8f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2a9d8f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
           </div>
-          <h1 className="font-display text-3xl text-ink mb-4">Payment confirmed.</h1>
-          <p className="text-charcoal-600 mb-3">
-            Welcome to the <strong>{successPlan}</strong> plan.
+          <h1 className="font-display text-3xl text-ink mb-4">Payment submitted.</h1>
+          <p className="text-charcoal-600 mb-2">
+            Thank you, <strong>{name}</strong>. We have received your payment details for the{" "}
+            <strong>{selectedPlan?.label}</strong>.
           </p>
           <p className="text-charcoal-600 mb-8">
-            We have sent a confirmation to <strong>{customerEmail}</strong>. Our team will contact you within 24 hours to schedule the onboarding call.
+            A confirmation has been sent to <strong>{email}</strong>. We will verify your payment
+            and contact you within <strong>2 to 4 hours</strong>.
           </p>
           <Link href="/" className="btn-accent">Back to Home</Link>
         </div>
@@ -258,158 +177,136 @@ export default function PricingClient() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-paper">
-      {/* Header */}
-      <section className="pt-32 pb-16 border-b border-charcoal-100">
-        <div className="container-grid">
-          <div className="md:col-span-8 lg:col-span-7">
-            <p className="label text-charcoal-400 mb-5">Pricing</p>
-            <h1 className="font-display text-5xl md:text-6xl text-ink leading-tight mb-6">Simple, transparent pricing.</h1>
-            <p className="text-xl text-charcoal-600 leading-relaxed max-w-2xl">
-              Every engagement starts with a ₹2K–₹5K paid pilot. Once you see results, choose your monthly plan.
-            </p>
-          </div>
-        </div>
-      </section>
+  // ── UPI payment screen ─────────────────────────────────────────────────────
+  if (step === "upi" && selectedPlan) {
+    const qrUrl = getQrUrl(
+      selectedPlan.amount,
+      `Manage Actly ${selectedPlan.label}`
+    );
 
-      {/* Pilot */}
-      <div className="container-grid pt-12 pb-8">
-        <div className="md:col-span-12">
-          <div className="bg-ink rounded-2xl p-8 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-            <div>
-              <p className="label text-teal-accent mb-3">Start Here — No Risk</p>
-              <p className="font-display text-4xl font-bold text-paper mb-2">₹2,000 – ₹5,000</p>
-              <p className="text-navy-300 text-sm mb-4">7–10 Day Paid Pilot</p>
-              <div className="flex flex-wrap gap-5 text-sm text-navy-200">
-                {["Full profile audit", "3 to 5 live posts", "Visual brand setup", "Zero long-term commitment"].map(f => (
-                  <div key={f} className="flex items-center gap-2">
-                    <span className="text-teal-accent font-bold text-xs">✓</span>
-                    {f}
-                  </div>
+    return (
+      <div className="min-h-screen bg-paper pt-28 pb-20 px-6">
+        <div className="max-w-2xl mx-auto">
+          {/* Back */}
+          <button
+            onClick={() => { setStep("plans"); setError(""); }}
+            className="flex items-center gap-2 text-sm text-charcoal-500 hover:text-ink mb-8 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+            Back to plans
+          </button>
+
+          <p className="label text-charcoal-400 mb-3">Payment</p>
+          <h1 className="font-display text-3xl text-ink mb-2">{selectedPlan.label}</h1>
+          <p className="text-charcoal-500 text-sm mb-10">
+            {selectedPlan.priceDisplay} &nbsp;·&nbsp; {selectedPlan.period}
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Left: QR + UPI details */}
+            <div className="bg-ink rounded-2xl p-8 flex flex-col items-center text-center">
+              <p className="label text-teal-accent mb-5">Pay via UPI</p>
+
+              {/* QR code */}
+              <div className="bg-paper rounded-xl p-3 mb-5 inline-block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={qrUrl}
+                  alt="UPI QR Code"
+                  width={180}
+                  height={180}
+                  className="block"
+                />
+              </div>
+
+              <p className="text-navy-400 text-xs mb-3">Scan with any UPI app</p>
+              <div className="text-xs text-navy-500 flex gap-2 justify-center flex-wrap mb-6">
+                {["GPay", "PhonePe", "Paytm", "BHIM"].map(app => (
+                  <span key={app} className="bg-navy-800 px-2 py-1 rounded">{app}</span>
                 ))}
               </div>
-            </div>
-            <button
-              onClick={() => handlePlanClick("PILOT")}
-              className="btn-accent shrink-0 text-base py-4 px-8"
-            >
-              Book Pilot — ₹2,000
-            </button>
-          </div>
-        </div>
-      </div>
 
-      {/* Plans */}
-      <div className="container-grid pb-16">
-        <div className="md:col-span-12">
-          <p className="label text-charcoal-400 mb-10">Monthly Plans</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-charcoal-200 rounded-2xl overflow-hidden">
-            {plans.map((plan, i) => (
-              <div
-                key={plan.id}
-                className={`relative flex flex-col p-8 md:p-10 ${
-                  plan.highlight ? "bg-ink" : "bg-paper"
-                } ${i < plans.length - 1 ? "border-b md:border-b-0 md:border-r border-charcoal-200" : ""}`}
-              >
-                {plan.badge && (
-                  <div className="absolute -top-3.5 left-8">
-                    <span className="text-xs bg-teal-accent text-paper px-3 py-1 rounded-full font-semibold">
-                      ★ {plan.badge}
-                    </span>
-                  </div>
-                )}
-
-                <p className={`label tracking-widest mb-4 ${plan.highlight ? "text-teal-accent" : "text-charcoal-400"}`}>
-                  {plan.label}
-                </p>
-
-                <p className={`font-display text-3xl md:text-4xl font-bold mb-1 ${plan.highlight ? "text-paper" : "text-ink"}`}>
-                  {plan.priceRange}
-                </p>
-                <p className={`text-sm mb-2 ${plan.highlight ? "text-navy-400" : "text-charcoal-500"}`}>
-                  {plan.period}
-                </p>
-
-                <div className={`my-5 h-px ${plan.highlight ? "bg-navy-800" : "bg-charcoal-100"}`} />
-
-                <p className={`text-xs font-bold tracking-widest mb-5 ${plan.highlight ? "text-navy-400" : "text-charcoal-400"}`}>
-                  {plan.for}
-                </p>
-
-                <ul className="space-y-3 flex-1 mb-8">
-                  {plan.features.map(f => (
-                    <li key={f} className="flex items-start gap-3">
-                      <span className="text-teal-accent font-bold text-sm shrink-0 mt-0.5">✓</span>
-                      <span className={`text-sm leading-snug ${plan.highlight ? "text-navy-200" : "text-charcoal-700"}`}>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
+              <div className="w-full border-t border-navy-800 pt-5">
+                <p className="text-navy-400 text-xs mb-1">Or pay directly to UPI ID</p>
                 <button
-                  onClick={() => handlePlanClick(plan.id)}
-                  className={`w-full py-3.5 rounded-full font-semibold text-sm transition-all duration-200 ${
-                    plan.highlight
-                      ? "bg-teal-accent text-paper hover:bg-teal-dark"
-                      : "border border-charcoal-200 text-ink hover:bg-charcoal-50 hover:border-charcoal-400"
-                  }`}
+                  onClick={() => { navigator.clipboard.writeText(UPI_ID); }}
+                  className="font-display text-xl text-paper hover:text-teal-accent transition-colors duration-200 flex items-center gap-2 mx-auto"
+                  title="Click to copy"
                 >
-                  Get Started — {plan.price}
+                  {UPI_ID}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                  </svg>
                 </button>
+                <p className="text-navy-600 text-xs mt-1">Click to copy</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      {/* Checkout form — appears when plan is selected */}
-      {showForm && (
-        <div id="checkout-form" className="container-grid pb-24">
-          <div className="md:col-span-8 lg:col-span-6">
-            <div className="bg-mist border border-charcoal-100 rounded-2xl p-8">
-              <h2 className="font-display text-2xl text-ink mb-2">Your Details</h2>
-              <p className="text-charcoal-600 text-sm mb-6">
-                Enter your details before proceeding to payment.
-                {selectedPlan && (
-                  <span className="ml-1 font-semibold text-teal-accent">
-                    Selected: {plans.find(p => p.id === selectedPlan)?.priceRange ?? selectedPlan}
-                    {selectedPlan === "PILOT" && " Pilot"}
-                  </span>
-                )}
-              </p>
+              <div className="mt-5 w-full border-t border-navy-800 pt-4">
+                <p className="text-navy-400 text-xs">Amount</p>
+                <p className="font-display text-2xl font-bold text-paper mt-1">
+                  {selectedPlan.priceDisplay}
+                </p>
+                <p className="text-navy-500 text-xs mt-1">Pay the starting amount shown above</p>
+              </div>
+            </div>
+
+            {/* Right: confirmation form */}
+            <div>
+              <h2 className="font-display text-xl text-ink mb-5">After paying, fill this form</h2>
 
               <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-charcoal-600 mb-2">Full Name *</label>
-                    <input
-                      className="form-input w-full"
-                      placeholder="Your name"
-                      value={customerName}
-                      onChange={e => setCustomerName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-charcoal-600 mb-2">Email Address *</label>
-                    <input
-                      type="email"
-                      className="form-input w-full"
-                      placeholder="you@email.com"
-                      value={customerEmail}
-                      onChange={e => setCustomerEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
                 <div>
-                  <label className="block text-xs font-semibold text-charcoal-600 mb-2">Phone / WhatsApp</label>
+                  <label className="block text-xs font-semibold text-charcoal-600 mb-2">
+                    Your Name *
+                  </label>
+                  <input
+                    className="form-input w-full"
+                    placeholder="Full name"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-charcoal-600 mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    className="form-input w-full"
+                    placeholder="you@email.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-charcoal-600 mb-2">
+                    Phone / WhatsApp
+                  </label>
                   <input
                     className="form-input w-full"
                     placeholder="+91 98765 43210"
-                    value={customerPhone}
-                    onChange={e => setCustomerPhone(e.target.value)}
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-charcoal-600 mb-2">
+                    UTR / Transaction ID *
+                  </label>
+                  <input
+                    className="form-input w-full"
+                    placeholder="12-digit UTR from your UPI app"
+                    value={utr}
+                    onChange={e => setUtr(e.target.value)}
+                  />
+                  <p className="text-xs text-charcoal-400 mt-1.5">
+                    Find this in your UPI app under transaction history. Looks like: 432112345678
+                  </p>
                 </div>
               </div>
 
@@ -419,40 +316,155 @@ export default function PricingClient() {
                 </div>
               )}
 
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={() => selectedPlan && initiateCheckout(selectedPlan)}
-                  disabled={!!loading}
-                  className="btn-accent flex-1 py-4 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-paper/30 border-t-paper rounded-full animate-spin" />
-                      Opening payment...
-                    </>
-                  ) : (
-                    <>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                      Pay with Razorpay
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => { setShowForm(false); setSelectedPlan(null); setError(null); }}
-                  className="btn-secondary px-5"
-                >
-                  Cancel
-                </button>
-              </div>
+              <button
+                onClick={handleSubmitPayment}
+                disabled={submitting}
+                className="btn-accent w-full mt-6 py-4 text-base disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-paper/30 border-t-paper rounded-full animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Confirm Payment"
+                )}
+              </button>
 
-              <div className="mt-4 flex items-center gap-2 justify-center">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7a8696" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                <p className="text-xs text-charcoal-400">Secured by Razorpay. 256-bit SSL encryption.</p>
-              </div>
+              <p className="text-xs text-charcoal-400 text-center mt-3">
+                We will verify your payment within 2 to 4 hours and contact you to get started.
+              </p>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  // ── Plans listing ──────────────────────────────────────────────────────────
+  return (
+    <div className="min-h-screen bg-paper">
+      {/* Header */}
+      <section className="pt-32 pb-16 border-b border-charcoal-100">
+        <div className="container-grid">
+          <div className="md:col-span-8 lg:col-span-7">
+            <p className="label text-charcoal-400 mb-5">Pricing</p>
+            <h1 className="font-display text-5xl md:text-6xl text-ink leading-tight mb-6">
+              Simple, transparent pricing.
+            </h1>
+            <p className="text-xl text-charcoal-600 leading-relaxed max-w-2xl">
+              Pay directly via UPI. No payment gateway. No extra charges. Every engagement starts with a paid pilot.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* UPI badge */}
+      <div className="border-b border-charcoal-100 bg-mist">
+        <div className="container-grid py-4">
+          <div className="md:col-span-12 flex items-center gap-3 flex-wrap">
+            <span className="text-xs font-semibold text-charcoal-500">Pay via:</span>
+            {["GPay", "PhonePe", "Paytm", "BHIM", "Any UPI App"].map(app => (
+              <span key={app} className="text-xs bg-paper border border-charcoal-200 text-charcoal-600 px-3 py-1 rounded-full">
+                {app}
+              </span>
+            ))}
+            <span className="text-xs text-charcoal-400 ml-2">UPI ID: <strong className="text-ink">{UPI_ID}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      {/* Plans */}
+      <div className="container-grid py-16">
+        <div className="md:col-span-12 space-y-6">
+          {plans.map((plan) => (
+            <div
+              key={plan.id}
+              className={`rounded-2xl border p-8 md:p-10 ${
+                plan.highlight
+                  ? "bg-ink border-navy-700"
+                  : "bg-paper border-charcoal-100"
+              }`}
+            >
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">
+                {/* Left */}
+                <div className="flex-1">
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className={`label tracking-widest ${plan.highlight ? "text-teal-accent" : "text-charcoal-400"}`}>
+                      {plan.label}
+                    </span>
+                    {plan.badge && (
+                      <span className="text-xs bg-teal-accent text-paper px-3 py-1 rounded-full font-semibold">
+                        {plan.badge}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className={`font-display text-4xl font-bold mb-1 ${plan.highlight ? "text-paper" : "text-ink"}`}>
+                    {plan.priceDisplay}
+                  </p>
+                  <p className={`text-sm mb-5 ${plan.highlight ? "text-navy-400" : "text-charcoal-500"}`}>
+                    {plan.period} &nbsp;·&nbsp; {plan.for}
+                  </p>
+
+                  <p className={`text-sm leading-relaxed mb-6 max-w-lg ${plan.highlight ? "text-navy-300" : "text-charcoal-600"}`}>
+                    {plan.description}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {plan.features.map(f => (
+                      <div key={f} className="flex items-start gap-2">
+                        <span className="text-teal-accent font-bold text-sm shrink-0 mt-0.5">✓</span>
+                        <span className={`text-sm ${plan.highlight ? "text-navy-200" : "text-charcoal-700"}`}>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right: CTA */}
+                <div className="shrink-0 flex flex-col items-start md:items-end gap-3">
+                  <button
+                    onClick={() => handleSelectPlan(plan)}
+                    className={`px-8 py-3.5 rounded-full font-semibold text-sm transition-all duration-200 whitespace-nowrap ${
+                      plan.highlight
+                        ? "bg-teal-accent text-paper hover:bg-teal-dark"
+                        : "bg-ink text-paper hover:bg-navy-800"
+                    }`}
+                  >
+                    {plan.isPilot ? "Book Pilot" : "Get Started"}
+                  </button>
+                  <p className={`text-xs ${plan.highlight ? "text-navy-500" : "text-charcoal-400"}`}>
+                    Pay via UPI · No gateway fees
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* How payment works */}
+      <div className="border-t border-charcoal-100 bg-mist">
+        <div className="container-grid py-16">
+          <div className="md:col-span-12">
+            <p className="label text-charcoal-400 mb-4">How Payment Works</p>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-0 border border-charcoal-200 rounded-2xl overflow-hidden">
+              {[
+                { step: "01", title: "Choose Plan", body: "Select the plan that fits your needs and click Get Started." },
+                { step: "02", title: "Pay via UPI", body: `Scan the QR code or send to ${UPI_ID} using any UPI app.` },
+                { step: "03", title: "Enter UTR", body: "Copy the transaction ID from your UPI app and submit it in the form." },
+                { step: "04", title: "We Verify", body: "We confirm receipt within 2 to 4 hours and contact you to begin." },
+              ].map((s, i, arr) => (
+                <div key={s.step} className={`p-6 bg-paper ${i < arr.length - 1 ? "border-b sm:border-b-0 sm:border-r border-charcoal-100" : ""}`}>
+                  <p className="font-mono text-xs text-charcoal-400 mb-3">{s.step}</p>
+                  <h3 className="font-display text-base text-ink mb-2">{s.title}</h3>
+                  <p className="text-xs text-charcoal-600 leading-relaxed">{s.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

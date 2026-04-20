@@ -1,15 +1,20 @@
-// src/app/api/contact/route.ts
+// src/app/api/careers/apply/route.ts
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { sendContactEmails } from "@/lib/email";
+import { sendCareerEmails } from "@/lib/email";
 
 const schema = z.object({
+  roleId: z.string(),
+  roleLabel: z.string(),
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().optional(),
-  business: z.string().optional(),
-  service: z.string().optional(),
-  message: z.string().min(1, "Message is required"),
+  city: z.string().optional(),
+  portfolioUrl: z.string().min(1, "Portfolio URL is required"),
+  experience: z.string().optional(),
+  whyUs: z.string().optional(),
+  availability: z.string().optional(),
+  fileNames: z.array(z.string()).optional(),
 });
 
 export async function POST(req: Request) {
@@ -23,11 +28,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
   }
 
+  const data = parsed.data;
+
   try {
-    await sendContactEmails(parsed.data);
-    console.log("[Contact] Emails sent:", parsed.data.name, parsed.data.email);
+    await sendCareerEmails(data);
+    console.log("[Careers] Emails sent:", data.name, data.roleLabel);
   } catch (err) {
-    console.error("[Contact] Email failed:", err);
+    console.error("[Careers] Email failed:", err);
   }
 
   return NextResponse.json({ success: true });
