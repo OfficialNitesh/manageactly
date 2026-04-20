@@ -1,4 +1,5 @@
 // src/app/api/careers/apply/route.ts
+
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sendCareerEmails } from "@/lib/email";
@@ -18,24 +19,32 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  let body: unknown;
-  try { body = await req.json(); } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  }
-
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
-  }
-
-  const data = parsed.data;
-
   try {
-    await sendCareerEmails(data);
-    console.log("[Careers] Emails sent:", data.name, data.roleLabel);
-  } catch (err) {
-    console.error("[Careers] Email failed:", err);
-  }
+    const body = await req.json();
 
-  return NextResponse.json({ success: true });
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.errors[0].message },
+        { status: 400 }
+      );
+    }
+
+    const data = parsed.data;
+
+    // 🚨 IMPORTANT: This function must NOT use nodemailer
+    await sendCareerEmails(data);
+
+    console.log("[Careers] Emails sent:", data.name, data.roleLabel);
+
+    return NextResponse.json({ success: true });
+
+  } catch (err) {
+    console.error("[Careers] Error:", err);
+
+    return NextResponse.json(
+      { error: "Something went wrong while submitting application" },
+      { status: 500 }
+    );
+  }
 }
