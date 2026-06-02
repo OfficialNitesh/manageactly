@@ -13,6 +13,7 @@ const roleLabels: Record<string, string> = {
   "pr-strategist": "PR and Communications Strategist",
   "web-developer": "Web Developer",
   "social-media-manager": "Social Media Account Manager",
+  "General": "General Application",
 };
 
 export default function ApplyPage({ searchParams }: { searchParams: { role?: string } }) {

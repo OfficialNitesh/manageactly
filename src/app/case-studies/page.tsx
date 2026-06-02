@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { generateMetadata as genMeta } from "@/lib/metadata";
 import Section from "@/components/layout/Section";
 import CtaBannerSection from "@/components/sections/CtaBannerSection";
@@ -143,10 +144,10 @@ export default function CaseStudiesPage() {
           <p className="text-charcoal-600 leading-relaxed">
             Be one of our first clients. Get our full attention and our best work.
           </p>
-          <a href="/contact" className="btn-accent inline-flex items-center gap-2 mt-6">
+          <Link href="/contact" className="btn-accent inline-flex items-center gap-2 mt-6">
             Start with a Pilot
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-          </a>
+          </Link>
         </div>
       </Section>
 

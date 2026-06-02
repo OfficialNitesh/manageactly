@@ -32,7 +32,7 @@ enum WorkspaceRole {
 enum PostStatus {
   DRAFT
   SCHEDULED
-  PUBLISHING  // transient — in-flight to API
+  PUBLISHING // transient — in-flight to API
   PUBLISHED
   FAILED
 }
@@ -144,11 +144,11 @@ model Workspace {
   ownerId String
   owner   User   @relation("WorkspaceOwner", fields: [ownerId], references: [id])
 
-  members          WorkspaceMember[]
+  members           WorkspaceMember[]
   socialConnections SocialConnection[]
-  posts            Post[]
-  subscription     Subscription?
-  auditLogs        AuditLog[]
+  posts             Post[]
+  subscription      Subscription?
+  auditLogs         AuditLog[]
 
   // Soft delete
   deletedAt DateTime?
@@ -199,13 +199,13 @@ model SocialConnection {
   platform    PostPlatform
 
   // LinkedIn-specific fields
-  platformUserId   String  // LinkedIn member URN
+  platformUserId   String // LinkedIn member URN
   platformUserName String? // Display name
 
   // Tokens — stored encrypted in DB
   // Use AES-256-GCM via lib/crypto.ts
-  accessToken           String  @db.Text // encrypted
-  refreshToken          String? @db.Text // encrypted (LinkedIn has long-lived tokens)
+  accessToken           String    @db.Text // encrypted
+  refreshToken          String?   @db.Text // encrypted (LinkedIn has long-lived tokens)
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
 
@@ -237,14 +237,14 @@ model Post {
   status      PostStatus   @default(DRAFT)
 
   // Content
-  content     String   @db.Text // raw text content
-  mediaUrls   String[] @default([]) // attached media
-  hashtags    String[] @default([])
+  content   String   @db.Text // raw text content
+  mediaUrls String[] @default([]) // attached media
+  hashtags  String[] @default([])
 
   // AI metadata
-  aiGenerated    Boolean @default(false)
-  aiPrompt       String? @db.Text // original user prompt
-  aiModel        String? // e.g. "gpt-4o-mini"
+  aiGenerated Boolean @default(false)
+  aiPrompt    String? @db.Text // original user prompt
+  aiModel     String? // e.g. "gpt-4o-mini"
 
   // Scheduling
   scheduledAt DateTime? // null = unscheduled
@@ -252,8 +252,8 @@ model Post {
 
   // Publishing result
   platformPostId String? // LinkedIn post URN on success
-  failureReason  String? @db.Text
-  retryCount     Int     @default(0)
+  failureReason  String?   @db.Text
+  retryCount     Int       @default(0)
   lastRetriedAt  DateTime?
 
   // Idempotency — prevents double-publish in cron
@@ -282,20 +282,18 @@ model Post {
 // ─────────────────────────────────────────────────────────────
 // SUBSCRIPTION
 // One subscription per workspace (org-level billing).
-// Razorpay is the initial provider; provider field enables
-// adding Stripe later without schema changes.
+// Payment collected via direct UPI transfers (no gateway).
 // ─────────────────────────────────────────────────────────────
 model Subscription {
   id          String @id @default(cuid())
   workspaceId String @unique // one subscription per workspace
 
-  // Provider abstraction (razorpay | stripe)
-  provider   String @default("razorpay")
+  // Payment provider (upi | future: stripe, etc)
+  provider String @default("upi")
 
-  // Razorpay IDs
-  razorpaySubscriptionId String?  @unique
-  razorpayCustomerId     String?
-  razorpayPlanId         String?
+  // Payment tracking (UTR-based for UPI)
+  upiPaymentId  String?   // UTR or transaction reference
+  upiTimestamp  DateTime? // When payment was verified
 
   // Plan & Status
   plan   SubscriptionPlan   @default(FREE)
@@ -308,7 +306,7 @@ model Subscription {
   cancelledAt        DateTime?
 
   // Limits (denormalized for fast gating — avoid join on every API call)
-  postsPerMonth   Int @default(10)  // FREE tier
+  postsPerMonth     Int @default(10) // FREE tier
   aiCreditsPerMonth Int @default(20) // FREE tier
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -318,7 +316,6 @@ model Subscription {
 
   @@index([workspaceId])
   @@index([status])
-  @@index([razorpaySubscriptionId])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -331,12 +328,12 @@ model AuditLog {
   workspaceId String
 
   // Who did it (null = system/cron)
-  actorId   String?
+  actorId    String?
   actorEmail String?
 
   // What happened
-  action  String // e.g. "post.published", "subscription.activated"
-  entity  String // e.g. "Post", "Subscription"
+  action   String // e.g. "post.published", "subscription.activated"
+  entity   String // e.g. "Post", "Subscription"
   entityId String? // ID of affected entity
 
   // Payload — store diffs or relevant context
@@ -353,4 +350,39 @@ model AuditLog {
   @@index([actorId])
   @@index([action])
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// LEAD
+// Stores leads from the "Book a Pilot" form on landing pages.
+// ─────────────────────────────────────────────────────────────
+model Lead {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @db.VarChar(255)
+  companyName String?
+  message     String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// APPLICANT
+// Stores career applications from the "Apply Now" and
+// "Send Your Portfolio" buttons on the careers page.
+// ─────────────────────────────────────────────────────────────
+model Applicant {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @db.VarChar(255)
+  phone          String?  @db.VarChar(20)
+  roleAppliedFor String // e.g., "Content Writer", "Graphic Designer"
+  portfolioLink  String?  @db.Text
+  appliedAt      DateTime @default(now())
+
+  @@index([email])
+  @@index([roleAppliedFor])
+  @@index([appliedAt])
 }

@@ -5,10 +5,9 @@
 2. Set up PostgreSQL database
 3. Set up environment variables (with exact values to fill in)
 4. Configure Gmail for emails
-5. Configure Razorpay for payments
-6. Configure Google OAuth for login
-7. Run the project
-8. Deploy to production (Vercel)
+5. Configure Google OAuth for login
+6. Run the project
+7. Deploy to production (Vercel)
 
 ---
 
@@ -79,11 +78,6 @@ ENCRYPTION_KEY=PASTE_GENERATED_VALUE_HERE
 
 # ── OpenAI (for AI caption generation in dashboard) ──────────────────────
 OPENAI_API_KEY=PASTE_FROM_OPENAI
-
-# ── Razorpay ─────────────────────────────────────────────────────────────
-RAZORPAY_KEY_ID=rzp_test_PASTE_FROM_RAZORPAY
-RAZORPAY_KEY_SECRET=PASTE_FROM_RAZORPAY
-RAZORPAY_WEBHOOK_SECRET=PASTE_FROM_RAZORPAY
 
 # ── Gmail (for contact form + career application emails) ─────────────────
 GMAIL_USER=yourname@gmail.com
@@ -171,53 +165,6 @@ Open these files and update the hardcoded email addresses to yours:
 
 ---
 
-## STEP 6 — Razorpay Setup
-
-1. Go to https://dashboard.razorpay.com and sign up
-2. Complete KYC verification (required to accept payments)
-3. Go to Settings → API Keys
-4. Click "Generate Test Key" (use test keys until you go live)
-5. Copy Key ID (starts with `rzp_test_`) and Key Secret
-6. Paste into `.env.local` as `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`
-
-### Set up Webhook (for payment notifications)
-
-1. In Razorpay Dashboard → Settings → Webhooks → Add New Webhook
-2. Webhook URL: `https://YOUR_DOMAIN.com/api/webhooks/razorpay`
-   (for local testing use ngrok — see below)
-3. Secret: generate one and paste as `RAZORPAY_WEBHOOK_SECRET` in `.env.local`
-4. Events to enable:
-   - payment.captured
-   - payment.failed
-   - subscription.activated
-   - subscription.charged
-   - subscription.cancelled
-
-### WHERE TO CHANGE IN CODE — Razorpay prices
-
-Open `src/app/api/payments/order/route.ts` — around line 10:
-
-```typescript
-// CHANGE THESE AMOUNTS (in paise — multiply rupees by 100):
-const PLAN_PRICES: Record<string, { amount: number; label: string }> = {
-  FOUNDATION: { amount: 1000000, label: "Foundation" },  // ₹10,000 → change to your price
-  GROWTH:     { amount: 2000000, label: "Growth" },       // ₹20,000 → change to your price
-  AUTHORITY:  { amount: 4000000, label: "Authority" },    // ₹40,000 → change to your price
-  PILOT:      { amount: 200000,  label: "Paid Pilot" },   // ₹2,000  → change to your price
-};
-```
-
-### Test Razorpay locally with ngrok
-
-```powershell
-# Install ngrok: https://ngrok.com/download
-ngrok http 3000
-# Copy the https URL e.g. https://abc123.ngrok.io
-# Use that as your webhook URL in Razorpay dashboard
-```
-
----
-
 ## STEP 7 — Push Database Schema
 
 ```powershell
@@ -245,9 +192,9 @@ Open http://localhost:3000
 - [ ] /login page shows Google sign-in button
 - [ ] Google sign-in works (redirects to /dashboard)
 - [ ] /pricing page loads with plan cards
-- [ ] Clicking "Get Started" opens details form
-- [ ] Razorpay checkout opens (use test card: 4111 1111 1111 1111)
+- [ ] Clicking "Get Started" opens payment form with UPI QR code
 - [ ] Contact form sends email to your Gmail
+- [ ] Career application form sends confirmation email
 - [ ] Career application sends confirmation email
 
 ---

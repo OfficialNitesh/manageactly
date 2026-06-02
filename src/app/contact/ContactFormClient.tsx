@@ -27,6 +27,21 @@ export default function ContactFormClient() {
     setStatus("submitting");
     setError("");
     try {
+      // Save as lead for tracking
+      const leadRes = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          companyName: form.business || null,
+          message: form.message,
+        }),
+      });
+
+      if (!leadRes.ok) throw new Error("Failed to save lead");
+
+      // Also send contact email
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

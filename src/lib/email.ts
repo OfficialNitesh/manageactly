@@ -1,42 +1,32 @@
 // src/lib/email.ts
-// Central email sender using Resend.
-// Works reliably on Vercel — no SMTP, no nodemailer needed.
-//
-// Setup:
-// 1. npm install resend
-// 2. Add RESEND_API_KEY to Vercel environment variables
-// 3. Add NOTIFY_EMAIL to Vercel environment variables (your personal email)
-// 4. Verify manageactly.in domain on resend.com/domains
+// Email sender using Nodemailer + Gmail
+// Uses GMAIL_USER and GMAIL_APP_PASSWORD from .env.local
 
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-function getResend(): Resend {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) {
+let transporter: nodemailer.Transporter | null = null;
+
+function getTransporter() {
+  if (transporter) return transporter;
+
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailPassword = process.env.GMAIL_APP_PASSWORD;
+
+  if (!gmailUser || !gmailPassword) {
     throw new Error(
-      "RESEND_API_KEY is not set. Add it to Vercel environment variables."
+      "GMAIL_USER and GMAIL_APP_PASSWORD must be set in .env.local"
     );
   }
-  return new Resend(key);
-}
 
-// The "from" address — must match your verified domain on Resend
-// Once manageactly.in is verified, use: hello@manageactly.in
-// While testing (before domain verified): onboarding@resend.dev
-const FROM_ADDRESS =
-  process.env.EMAIL_FROM ?? "Manage Actly <hello@manageactly.in>";
+  transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: gmailUser,
+      pass: gmailPassword,
+    },
+  });
 
-// Where to send your internal notifications
-// Set NOTIFY_EMAIL in Vercel env vars to your personal Gmail or any email
-function getNotifyEmail(): string {
-  const email = process.env.NOTIFY_EMAIL;
-  if (!email) {
-    console.warn(
-      "[Email] NOTIFY_EMAIL not set — notifications will not be sent"
-    );
-    return "";
-  }
-  return email;
+  return transporter;
 }
 
 // ── Send a single email ────────────────────────────────────────────────────
@@ -48,22 +38,22 @@ interface SendEmailOptions {
 }
 
 export async function sendEmail({ to, subject, html }: SendEmailOptions) {
-  const resend = getResend();
+  try {
+    const transporter = getTransporter();
 
-  const { data, error } = await resend.emails.send({
-    from: FROM_ADDRESS,
-    to,
-    subject,
-    html,
-  });
+    const info = await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to,
+      subject,
+      html,
+    });
 
-  if (error) {
-    console.error("[Email] Send failed:", error);
-    throw new Error(`Email send failed: ${error.message}`);
+    console.log("[Email] Sent:", { to, subject, messageId: info.messageId });
+    return info;
+  } catch (err) {
+    console.error("[Email] Send failed:", err);
+    throw err;
   }
-
-  console.log("[Email] Sent:", { to, subject, id: data?.id });
-  return data;
 }
 
 // ── Contact form emails ─────────────────────────────────────────────────────
@@ -78,7 +68,8 @@ interface ContactData {
 }
 
 export async function sendContactEmails(d: ContactData) {
-  const notifyEmail = getNotifyEmail();
+  const notifyEmail =
+    process.env.CONTACT_NOTIFY_EMAIL || process.env.GMAIL_USER;
 
   // 1. Confirmation to person who filled the form
   await sendEmail({
@@ -148,7 +139,8 @@ interface CareerData {
 }
 
 export async function sendCareerEmails(d: CareerData) {
-  const notifyEmail = getNotifyEmail();
+  const notifyEmail =
+    process.env.CAREERS_NOTIFY_EMAIL || process.env.GMAIL_USER;
 
   // 1. Confirmation to applicant
   await sendEmail({
@@ -221,7 +213,7 @@ interface PaymentData {
 }
 
 export async function sendPaymentEmails(d: PaymentData) {
-  const notifyEmail = getNotifyEmail();
+  const notifyEmail = process.env.CONTACT_NOTIFY_EMAIL || process.env.GMAIL_USER;
 
   // 1. Confirmation to customer
   await sendEmail({
@@ -274,6 +266,93 @@ export async function sendPaymentEmails(d: PaymentData) {
           <p style="margin-top:20px;color:#e74c3c;font-weight:bold;">
             Action: Check your Axis Bank UPI app for a payment of ${d.amount} with UTR ${d.utrNumber}
           </p>
+        </div>
+      `,
+    });
+  }
+}
+
+// ── Lead form emails (Book a Pilot) ────────────────────────────────────────
+
+interface LeadData {
+  name: string;
+  email: string;
+  companyName?: string;
+  message?: string;
+}
+
+export async function sendLeadNotificationEmail(d: LeadData) {
+  const notifyEmail = process.env.CONTACT_NOTIFY_EMAIL || process.env.GMAIL_USER;
+
+  // Send notification to you
+  if (notifyEmail) {
+    await sendEmail({
+      to: notifyEmail,
+      subject: `New Lead: ${d.name}${d.companyName ? ` — ${d.companyName}` : ""}`,
+      html: `
+        <div style="font-family:monospace;max-width:520px;padding:28px 24px;color:#1a1a2e;">
+          <h2 style="font-size:16px;margin-bottom:16px;">New Lead from Book a Pilot</h2>
+          <table style="font-size:14px;border-collapse:collapse;">
+            <tr><td style="color:#888;padding:6px 12px 6px 0;width:120px;">Name</td><td style="padding:6px 0;"><strong>${d.name}</strong></td></tr>
+            <tr><td style="color:#888;padding:6px 12px 6px 0;">Email</td><td style="padding:6px 0;"><a href="mailto:${d.email}" style="color:#2a9d8f;">${d.email}</a></td></tr>
+            ${d.companyName ? `<tr><td style="color:#888;padding:6px 12px 6px 0;">Company</td><td style="padding:6px 0;">${d.companyName}</td></tr>` : ""}
+          </table>
+          ${d.message ? `<div style="margin-top:16px;padding:12px 16px;background:#f5f5f0;border-radius:8px;"><p style="font-size:12px;color:#888;margin:0 0 6px;font-weight:bold;text-transform:uppercase;letter-spacing:.05em;">Message</p><p style="font-size:14px;color:#333;margin:0;line-height:1.6;">${d.message}</p></div>` : ""}
+        </div>
+      `,
+    });
+  }
+}
+
+// ── Applicant confirmation emails ──────────────────────────────────────────
+
+interface ApplicantData {
+  id: string;
+  name: string;
+  email: string;
+  roleAppliedFor: string;
+  appliedAt: Date;
+}
+
+export async function sendApplicantConfirmationEmail(d: ApplicantData) {
+  const notifyEmail = process.env.CAREERS_NOTIFY_EMAIL || process.env.GMAIL_USER;
+
+  // 1. Confirmation to applicant
+  await sendEmail({
+    to: d.email,
+    subject: `Your application for ${d.roleAppliedFor} — Manage Actly`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:40px 24px;color:#1a1a2e;">
+        <p style="font-size:20px;font-weight:bold;margin-bottom:28px;">Manage Actly</p>
+        <h1 style="font-size:22px;margin-bottom:16px;">Application received.</h1>
+        <p style="color:#555;line-height:1.7;margin-bottom:14px;">Hi ${d.name},</p>
+        <p style="color:#555;line-height:1.7;margin-bottom:14px;">
+          Thank you for applying for the <strong>${d.roleAppliedFor}</strong> role at Manage Actly.
+          We will review your application and get back to you within <strong>5 business days</strong>.
+        </p>
+        <p style="color:#555;line-height:1.7;">
+          Questions? Write to
+          <a href="mailto:careers@manageactly.in" style="color:#2a9d8f;">careers@manageactly.in</a>
+        </p>
+        <p style="color:#555;margin-top:28px;">Warm regards,<br><strong>Manage Actly Team</strong></p>
+      </div>
+    `,
+  });
+
+  // 2. Notification to you
+  if (notifyEmail) {
+    await sendEmail({
+      to: notifyEmail,
+      subject: `New Application: ${d.roleAppliedFor} — ${d.name}`,
+      html: `
+        <div style="font-family:monospace;max-width:520px;padding:28px 24px;color:#1a1a2e;">
+          <h2 style="font-size:16px;margin-bottom:16px;">New Career Application</h2>
+          <table style="font-size:14px;border-collapse:collapse;">
+            <tr><td style="color:#888;padding:6px 12px 6px 0;width:120px;">Role</td><td style="padding:6px 0;"><strong>${d.roleAppliedFor}</strong></td></tr>
+            <tr><td style="color:#888;padding:6px 12px 6px 0;">Name</td><td style="padding:6px 0;">${d.name}</td></tr>
+            <tr><td style="color:#888;padding:6px 12px 6px 0;">Email</td><td style="padding:6px 0;"><a href="mailto:${d.email}" style="color:#2a9d8f;">${d.email}</a></td></tr>
+            <tr><td style="color:#888;padding:6px 12px 6px 0;">Applied</td><td style="padding:6px 0;">${d.appliedAt.toLocaleDateString()}</td></tr>
+          </table>
         </div>
       `,
     });

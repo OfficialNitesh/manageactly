@@ -74,9 +74,8 @@ Open http://localhost:3000
 4. ✅ Add Google credentials — test /login
 5. 🔜 Add OPENAI_API_KEY — test AI generation
 6. 🔜 Add LinkedIn credentials — test OAuth connect
-7. 🔜 Add Razorpay credentials — test subscription
 
-## Gmail Email Setup (for contact and career forms)
+## Email Setup (for contact and career forms)
 
 The contact form and career application form both send emails via Gmail.
 

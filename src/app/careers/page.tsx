@@ -178,10 +178,10 @@ export default function CareersPage() {
             <p className="label text-teal-accent mb-4">Do not see your role?</p>
             <h2 className="font-display text-3xl text-paper mb-4">We are always open to exceptional talent.</h2>
             <p className="text-navy-300 mb-8">If you are genuinely good at what you do and want to be part of a growing agency, send us your work.</p>
-            <a href="mailto:careers@manageactly.com" className="btn-accent inline-flex items-center gap-2">
+            <Link href="/careers/apply?role=General" className="btn-accent inline-flex items-center gap-2">
               Send Your Portfolio
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-            </a>
+            </Link>
           </div>
         </div>
       </section>

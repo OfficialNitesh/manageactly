@@ -38,6 +38,22 @@ export default function CareerApplicationForm({ roleId, roleLabel }: Props) {
     setStatus("submitting");
     setErrorMsg("");
     try {
+      // Save to Applicant table
+      const applicantRes = await fetch("/api/applicants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone || null,
+          roleAppliedFor: roleLabel,
+          portfolioLink: form.portfolioUrl,
+        }),
+      });
+
+      if (!applicantRes.ok) throw new Error("Failed to save application");
+
+      // Also send traditional email notification
       const res = await fetch("/api/careers/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
