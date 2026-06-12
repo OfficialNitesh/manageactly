@@ -40,6 +40,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to save contact lead to database" }, { status: 500 });
   }
 
+  // 2. Send emails
   try {
     await sendContactEmails({
       name: parsed.data.name,
@@ -50,9 +51,8 @@ export async function POST(req: Request) {
       message: parsed.data.message,
     });
     console.log("[Contact] Emails sent:", parsed.data.name, parsed.data.email);
-  } catch (err) {
-    console.error("[Contact] Email failed:", err);
-    return NextResponse.json({ error: "Failed to send contact emails" }, { status: 500 });
+  } catch (emailErr) {
+    console.error("[Contact] Email sending failed:", emailErr);
   }
 
   return NextResponse.json({ success: true });

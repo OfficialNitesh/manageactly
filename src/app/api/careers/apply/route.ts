@@ -46,8 +46,12 @@ export async function POST(req: Request) {
     console.log("[Careers] Saved applicant to database:", data.email);
 
     // 2. Send emails
-    await sendCareerEmails(data);
-    console.log("[Careers] Emails sent:", data.name, data.roleLabel);
+    try {
+      await sendCareerEmails(data);
+      console.log("[Careers] Emails sent:", data.name, data.roleLabel);
+    } catch (emailErr) {
+      console.error("[Careers] Email sending failed:", emailErr);
+    }
 
     return NextResponse.json({ success: true });
 
