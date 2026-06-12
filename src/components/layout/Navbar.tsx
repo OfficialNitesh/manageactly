@@ -95,7 +95,7 @@ export default function Navbar() {
           {/* ── Desktop CTA ── */}
           <div className="hidden lg:flex items-center gap-3">
             <Link href="/contact" className="btn-accent text-sm py-2.5 px-6">
-              Book a Pilot
+              Get Started
             </Link>
           </div>
 
@@ -154,7 +154,7 @@ export default function Navbar() {
               })}
               <div className="pt-4 border-t border-charcoal-100 mt-2 grid grid-cols-2 gap-3">
                 <Link href="/contact" className="btn-accent w-full justify-center text-sm py-3">
-                  Book a Pilot
+                  Get Started
                 </Link>
                 <a href="https://wa.me/918178114219" target="_blank" rel="noopener noreferrer"
                   className="btn-secondary w-full justify-center text-sm py-3 flex items-center gap-2">

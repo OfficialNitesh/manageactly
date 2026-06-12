@@ -51,7 +51,7 @@ const posts = [
   {
     category: "Website",
     title: "Does your business actually need a website in 2024?",
-    excerpt: "Social media has replaced websites for some businesses — but not all. Here is how to decide what you actually need and what it should do.",
+    excerpt: "Social media has replaced websites for some businesses, but not all. Here is how to decide what you actually need and what it should do.",
     readTime: "5 min read",
     slug: "does-your-business-need-a-website",
   },

@@ -101,11 +101,11 @@
   }
 
   .section-padding {
-    @apply py-24 md:py-32;
+    @apply py-16 md:py-20;
   }
 
   .section-padding-sm {
-    @apply py-16 md:py-20;
+    @apply py-10 md:py-12;
   }
 
   /* Typography utilities */

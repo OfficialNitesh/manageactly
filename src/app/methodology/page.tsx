@@ -15,7 +15,7 @@ const phases = [
     title: "The Onboarding Call",
     duration: "Day 1",
     description:
-      "We start with a focused 30 to 45 minute call. We ask about your brand, your audience, your competitors and what you actually want from social media. We take notes on everything — your tone, your values, what you hate seeing on other brand pages.",
+      "We start with a focused 30 to 45 minute call. We ask about your brand, your audience, your competitors and what you actually want from social media. We take notes on everything, including your tone, values, and what you hate seeing on other brand pages.",
     outputs: [
       "Brand tone and voice document",
       "Audience profile and persona",
@@ -45,7 +45,7 @@ const phases = [
     title: "Content Creation and Publishing",
     duration: "Day 5 onwards",
     description:
-      "We create, review and publish content on your approved schedule. Static posts, reels, carousels, stories — whatever the strategy calls for. You can approve content before it goes live or give us full creative control. Either way works.",
+      "We create, review and publish content on your approved schedule. Static posts, reels, carousels, and stories, tailored to whatever the strategy calls for. You can approve content before it goes live or give us full creative control. Either way works.",
     outputs: [
       "Posts published on schedule",
       "Reels and short-form video",
@@ -60,7 +60,7 @@ const phases = [
     title: "Community Management",
     duration: "Ongoing daily",
     description:
-      "We respond to comments, answer DMs, engage with followers and keep your community active. Real conversations, not automated replies. Your audience should feel like there is a real human behind the account — because there is.",
+      "We respond to comments, answer DMs, engage with followers and keep your community active. Real conversations, not automated replies. Your audience should feel like there is a real human behind the account, because there is.",
     outputs: [
       "All comments replied to within 24 hours",
       "DM handling for enquiries",

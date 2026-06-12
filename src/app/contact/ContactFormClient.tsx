@@ -16,32 +16,17 @@ export default function ContactFormClient() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
 
-  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.message) {
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
       setError("Please fill in name, email and message.");
       return;
     }
     setStatus("submitting");
     setError("");
     try {
-      // Save as lead for tracking
-      const leadRes = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          companyName: form.business || null,
-          message: form.message,
-        }),
-      });
-
-      if (!leadRes.ok) throw new Error("Failed to save lead");
-
-      // Also send contact email
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -57,40 +42,86 @@ export default function ContactFormClient() {
 
   if (status === "success") {
     return (
-      <div className="bg-paper rounded-2xl border border-charcoal-100 p-12 text-center">
-        <div className="w-16 h-16 bg-teal-accent/10 rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2a9d8f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      <div className="bg-paper rounded-3xl border border-charcoal-100 p-12 text-center shadow-xl hover:shadow-card-hover transition-all duration-300">
+        <div className="w-20 h-20 bg-teal-accent/10 rounded-full flex items-center justify-center mx-auto mb-8 ring-8 ring-teal-accent/5">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2a9d8f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-bounce text-teal-accent">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
         </div>
-        <h2 className="font-display text-2xl text-ink mb-3">Message received.</h2>
-        <p className="text-charcoal-600">We will get back to you within 24 hours.</p>
+        <h2 className="font-display text-2xl font-bold text-ink mb-3">Message Received</h2>
+        <p className="text-charcoal-600 text-sm max-w-sm mx-auto leading-relaxed font-medium">
+          Thank you. We review every inquiry personally and will get back to you within <strong>24 hours</strong>.
+        </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6 bg-paper rounded-3xl border border-charcoal-100 p-8 md:p-10 shadow-xl">
+      <div className="border-b border-charcoal-100 pb-5">
+        <h2 className="font-display text-2xl text-ink font-bold">Get Started</h2>
+        <p className="text-xs text-charcoal-500 mt-1">Tell us about your brand and project goals.</p>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
-          <label className="block text-xs font-semibold text-charcoal-600 mb-2">Your Name *</label>
-          <input className="form-input w-full" placeholder="Full name" value={form.name} onChange={e => set("name", e.target.value)} required />
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal-600 mb-2">
+            Your Name *
+          </label>
+          <input
+            className="form-input w-full focus:ring-2 focus:ring-teal-accent/20 transition-all duration-200"
+            placeholder="Full name"
+            value={form.name}
+            onChange={(e) => set("name", e.target.value)}
+            required
+          />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-charcoal-600 mb-2">Email Address *</label>
-          <input type="email" className="form-input w-full" placeholder="you@email.com" value={form.email} onChange={e => set("email", e.target.value)} required />
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal-600 mb-2">
+            Email Address *
+          </label>
+          <input
+            type="email"
+            className="form-input w-full focus:ring-2 focus:ring-teal-accent/20 transition-all duration-200"
+            placeholder="you@example.com"
+            value={form.email}
+            onChange={(e) => set("email", e.target.value)}
+            required
+          />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-charcoal-600 mb-2">Phone / WhatsApp</label>
-          <input className="form-input w-full" placeholder="+91 98765 43210" value={form.phone} onChange={e => set("phone", e.target.value)} />
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal-600 mb-2">
+            Phone / WhatsApp
+          </label>
+          <input
+            className="form-input w-full focus:ring-2 focus:ring-teal-accent/20 transition-all duration-200"
+            placeholder="+91 98765 43210"
+            value={form.phone}
+            onChange={(e) => set("phone", e.target.value)}
+          />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-charcoal-600 mb-2">Business Name</label>
-          <input className="form-input w-full" placeholder="Your business" value={form.business} onChange={e => set("business", e.target.value)} />
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal-600 mb-2">
+            Business Name
+          </label>
+          <input
+            className="form-input w-full focus:ring-2 focus:ring-teal-accent/20 transition-all duration-200"
+            placeholder="Your business"
+            value={form.business}
+            onChange={(e) => set("business", e.target.value)}
+          />
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-charcoal-600 mb-2">What are you interested in?</label>
-        <select className="form-input w-full" value={form.service} onChange={e => set("service", e.target.value)}>
+        <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal-600 mb-2">
+          What are you interested in?
+        </label>
+        <select
+          className="form-input w-full focus:ring-2 focus:ring-teal-accent/20 transition-all duration-200 cursor-pointer"
+          value={form.service}
+          onChange={(e) => set("service", e.target.value)}
+        >
           <option value="">Select a service</option>
           <option value="pilot">Paid Pilot (₹2K–₹5K)</option>
           <option value="foundation">Foundation Plan (₹10K–₹15K/mo)</option>
@@ -102,37 +133,44 @@ export default function ContactFormClient() {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-charcoal-600 mb-2">Tell us about your brand *</label>
+        <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal-600 mb-2">
+          Tell us about your brand *
+        </label>
         <textarea
-          className="form-input w-full resize-none"
+          className="form-input w-full resize-none focus:ring-2 focus:ring-teal-accent/20 transition-all duration-200"
           rows={5}
           placeholder="What does your business do? What are your social media goals? What is your current situation online?"
           value={form.message}
-          onChange={e => set("message", e.target.value)}
+          onChange={(e) => set("message", e.target.value)}
           required
         />
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-xs font-semibold flex items-start gap-2">
+          <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          <span>{error}</span>
         </div>
       )}
 
       <button
         type="submit"
         disabled={status === "submitting"}
-        className="btn-accent w-full py-4 text-base disabled:opacity-60 disabled:cursor-not-allowed"
+        className="btn-accent w-full py-4 text-sm font-semibold tracking-wide shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
       >
         {status === "submitting" ? (
           <span className="flex items-center justify-center gap-2">
             <span className="w-4 h-4 border-2 border-paper/30 border-t-paper rounded-full animate-spin" />
-            Sending...
+            Sending Message...
           </span>
-        ) : "Send Message"}
+        ) : (
+          "Send Message"
+        )}
       </button>
 
-      <p className="text-xs text-charcoal-400 text-center">We reply within 24 hours. No spam, ever.</p>
+      <p className="text-[10px] text-charcoal-400 text-center font-medium">We reply within 24 hours. No spam, ever.</p>
     </form>
   );
 }

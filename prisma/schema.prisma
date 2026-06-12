@@ -386,3 +386,20 @@ model Applicant {
   @@index([roleAppliedFor])
   @@index([appliedAt])
 }
+
+// ─────────────────────────────────────────────────────────────
+// PORTFOLIO SUBMISSION
+// Stores submissions from the "Send Your Portfolio" form.
+// ─────────────────────────────────────────────────────────────
+model PortfolioSubmission {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @db.VarChar(255)
+  portfolioLink String   @db.Text
+  message       String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("portfolio_submissions")
+}

@@ -2,8 +2,9 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
 
@@ -82,8 +83,8 @@ export default function SuccessPage() {
         <div className="text-center mb-6">
           <p className="text-sm text-gray-600">
             Questions? Contact us at{" "}
-            <a href="mailto:hello@manageactly.in" className="text-emerald-600 font-semibold hover:underline">
-              hello@manageactly.in
+            <a href="mailto:realofficialcreator@gmail.com" className="text-emerald-600 font-semibold hover:underline">
+              realofficialcreator@gmail.com
             </a>
           </p>
         </div>
@@ -97,5 +98,17 @@ export default function SuccessPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-emerald-600"></div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }

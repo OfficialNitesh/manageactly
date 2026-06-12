@@ -3,6 +3,8 @@
 // Generates a CSRF state token, stores it in session, redirects to LinkedIn.
 
 import { NextResponse } from "next/server";
+
+export const dynamic = 'force-dynamic';
 import { getLinkedInAuthUrl } from "@/lib/linkedin";
 import { requireAuth, withErrorHandling, badRequest } from "@/lib/api";
 import { randomBytes } from "crypto";

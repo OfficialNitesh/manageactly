@@ -1,14 +1,14 @@
 // src/app/api/leads/route.ts
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
+import prisma from "@/lib/db";
 import { sendLeadNotificationEmail } from "@/lib/email";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Valid email is required"),
-  companyName: z.string().optional(),
-  message: z.string().optional(),
+  companyName: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
 });
 
 export async function POST(req: Request) {
@@ -33,11 +33,14 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log("[Lead] Saved to database:", lead.id);
-
-    // Send notification email (optional, add to your email service)
+    // Send notification email
     try {
-      await sendLeadNotificationEmail(parsed.data);
+      await sendLeadNotificationEmail({
+        name: parsed.data.name,
+        email: parsed.data.email,
+        companyName: parsed.data.companyName || undefined,
+        message: parsed.data.message || undefined,
+      });
       console.log("[Lead] Notification email sent to admin");
     } catch (emailErr) {
       console.error("[Lead] Email notification failed:", emailErr);

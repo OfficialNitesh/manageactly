@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import prisma from "@/lib/db";
 import { sendCareerEmails } from "@/lib/email";
 
 const schema = z.object({
@@ -32,9 +33,20 @@ export async function POST(req: Request) {
 
     const data = parsed.data;
 
-    // 🚨 IMPORTANT: This function must NOT use nodemailer
-    await sendCareerEmails(data);
+    // 1. Database Integration: save the applicant to database before emailing
+    await prisma.applicant.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        phone: data.phone || null,
+        roleAppliedFor: data.roleLabel,
+        portfolioLink: data.portfolioUrl,
+      },
+    });
+    console.log("[Careers] Saved applicant to database:", data.email);
 
+    // 2. Send emails
+    await sendCareerEmails(data);
     console.log("[Careers] Emails sent:", data.name, data.roleLabel);
 
     return NextResponse.json({ success: true });

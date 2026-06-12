@@ -1,14 +1,15 @@
 // src/app/api/contact/route.ts
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import prisma from "@/lib/db";
 import { sendContactEmails } from "@/lib/email";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Valid email is required"),
-  phone: z.string().optional(),
-  business: z.string().optional(),
-  service: z.string().optional(),
+  phone: z.string().nullable().optional(),
+  business: z.string().nullable().optional(),
+  service: z.string().nullable().optional(),
   message: z.string().min(1, "Message is required"),
 });
 
@@ -24,10 +25,34 @@ export async function POST(req: Request) {
   }
 
   try {
-    await sendContactEmails(parsed.data);
+    // 1. Database Integration: save the lead before sending emails
+    await prisma.lead.create({
+      data: {
+        name: parsed.data.name,
+        email: parsed.data.email,
+        companyName: parsed.data.business || null,
+        message: `Phone: ${parsed.data.phone || "N/A"}\nService: ${parsed.data.service || "N/A"}\n\nMessage: ${parsed.data.message}`,
+      },
+    });
+    console.log("[Contact] Saved lead to database:", parsed.data.email);
+  } catch (dbErr) {
+    console.error("[Contact] Database save failed:", dbErr);
+    return NextResponse.json({ error: "Failed to save contact lead to database" }, { status: 500 });
+  }
+
+  try {
+    await sendContactEmails({
+      name: parsed.data.name,
+      email: parsed.data.email,
+      phone: parsed.data.phone || undefined,
+      business: parsed.data.business || undefined,
+      service: parsed.data.service || undefined,
+      message: parsed.data.message,
+    });
     console.log("[Contact] Emails sent:", parsed.data.name, parsed.data.email);
   } catch (err) {
     console.error("[Contact] Email failed:", err);
+    return NextResponse.json({ error: "Failed to send contact emails" }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

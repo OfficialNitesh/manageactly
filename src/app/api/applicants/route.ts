@@ -1,15 +1,15 @@
 // src/app/api/applicants/route.ts
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
+import prisma from "@/lib/db";
 import { sendApplicantConfirmationEmail } from "@/lib/email";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Valid email is required"),
-  phone: z.string().optional(),
+  phone: z.string().nullable().optional(),
   roleAppliedFor: z.string().min(1, "Role is required"),
-  portfolioLink: z.string().url("Valid URL required").optional(),
+  portfolioLink: z.string().nullable().optional(),
 });
 
 export async function POST(req: Request) {

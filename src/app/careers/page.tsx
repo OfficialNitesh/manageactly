@@ -101,88 +101,139 @@ const process = [
 export default function CareersPage() {
   return (
     <>
-      <section className="pt-32 pb-16 bg-paper border-b border-charcoal-100">
-        <div className="container-grid">
-          <div className="md:col-span-8 lg:col-span-7">
-            <p className="label text-charcoal-400 mb-5">Join the Team</p>
-            <h1 className="font-display text-5xl md:text-6xl text-ink leading-tight mb-6">Careers</h1>
-            <p className="text-xl text-charcoal-600 leading-relaxed max-w-2xl">
-              We are a small, focused team building something real. Every person here does work that matters directly for our clients.
-            </p>
-          </div>
+      {/* Header section */}
+      <section className="relative pt-36 pb-20 border-b border-charcoal-100/50 bg-gradient-to-b from-mist via-paper to-paper overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+        <div className="container-grid relative z-10 text-center max-w-3xl mx-auto">
+          <p className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold bg-teal-accent/10 text-teal-accent mb-6 animate-pulse">
+            We're Hiring
+          </p>
+          <h1 className="font-display text-5xl md:text-6xl text-ink leading-tight font-bold mb-6 tracking-tight">
+            Join the Creative Force.
+          </h1>
+          <p className="text-lg text-charcoal-600 leading-relaxed max-w-2xl mx-auto font-medium">
+            We are a small, focused team building something real. Every person here does work that matters directly for our clients.
+          </p>
         </div>
       </section>
 
-      {/* Hiring process */}
-      <Section variant="muted" className="border-b border-charcoal-100">
-        <p className="label text-charcoal-400 mb-4">Our Hiring Process</p>
-        <h2 className="font-display text-3xl md:text-4xl text-ink mb-12">Transparent from start to finish.</h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-0 border border-charcoal-200 rounded-2xl overflow-hidden">
-          {process.map((p, i) => (
-            <div key={p.step} className={`p-6 ${i < process.length - 1 ? "border-b sm:border-b-0 sm:border-r border-charcoal-200" : ""}`}>
-              <p className="font-mono text-xs text-charcoal-400 mb-3">{p.step}</p>
-              <h3 className="font-display text-base text-ink mb-2">{p.title}</h3>
-              <p className="text-xs text-charcoal-600 leading-relaxed">{p.body}</p>
-            </div>
-          ))}
+      {/* Hiring process timeline */}
+      <Section variant="muted" className="border-b border-charcoal-100 relative overflow-hidden">
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <p className="label text-teal-accent mb-4">Our Hiring Process</p>
+          <h2 className="font-display text-3xl md:text-4xl text-ink font-bold">Transparent from start to finish.</h2>
         </div>
-      </Section>
 
-      {/* Open roles */}
-      <Section>
-        <p className="label text-charcoal-400 mb-4">Open Roles</p>
-        <h2 className="font-display text-3xl md:text-4xl text-ink mb-12">Current opportunities.</h2>
-
-        <div className="space-y-4">
-          {roles.map((role) => (
-            <div
-              key={role.id}
-              className="group border border-charcoal-100 rounded-2xl p-8 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-300"
-            >
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-                <div className="flex-1">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="text-xs font-semibold bg-mist text-charcoal-600 px-3 py-1 rounded-full">{role.department}</span>
-                    <span className="text-xs border border-charcoal-200 text-charcoal-500 px-3 py-1 rounded-full">{role.type}</span>
-                  </div>
-                  <h3 className="font-display text-xl text-ink mb-3">{role.title}</h3>
-                  <p className="text-sm text-charcoal-600 leading-relaxed max-w-2xl mb-5">{role.description}</p>
-                  <div className="space-y-1.5">
-                    {role.requirements.map(req => (
-                      <div key={req} className="flex items-start gap-2">
-                        <span className="text-teal-accent text-xs mt-0.5 shrink-0 font-bold">✓</span>
-                        <span className="text-xs text-charcoal-600">{req}</span>
-                      </div>
-                    ))}
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 max-w-6xl mx-auto relative">
+          {/* Connecting line for desktop only */}
+          <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-[2px] bg-gradient-to-r from-teal-accent/10 via-teal-accent to-teal-accent/10 z-0" />
+          
+          {process.map((p) => (
+            <div key={p.step} className="bg-paper border border-charcoal-100 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative z-10 flex flex-col justify-between group">
+              <div>
+                <div className="w-12 h-12 rounded-full bg-teal-accent text-paper flex items-center justify-center font-mono text-sm font-bold mb-6 shadow-md shadow-teal-accent/10 ring-4 ring-teal-accent/5 group-hover:scale-110 transition-transform">
+                  {p.step}
                 </div>
-                <div className="shrink-0">
-                  <Link
-                    href={`/careers/apply?role=${role.id}`}
-                    className="btn-accent text-sm py-3 px-6 inline-block"
-                  >
-                    Apply Now
-                  </Link>
-                </div>
+                <h3 className="font-display text-base font-bold text-ink mb-3 group-hover:text-teal-accent transition-colors">{p.title}</h3>
+                <p className="text-xs text-charcoal-600 leading-relaxed font-medium">{p.body}</p>
               </div>
             </div>
           ))}
         </div>
       </Section>
 
-      {/* Bottom CTA */}
-      <section className="bg-ink">
-        <div className="container-grid py-20">
-          <div className="max-w-2xl">
-            <p className="label text-teal-accent mb-4">Do not see your role?</p>
-            <h2 className="font-display text-3xl text-paper mb-4">We are always open to exceptional talent.</h2>
-            <p className="text-navy-300 mb-8">If you are genuinely good at what you do and want to be part of a growing agency, send us your work.</p>
-            <Link href="/careers/apply?role=General" className="btn-accent inline-flex items-center gap-2">
-              Send Your Portfolio
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-            </Link>
-          </div>
+      {/* Open roles listing */}
+      <Section className="bg-paper">
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <p className="label text-teal-accent mb-4">Open Roles</p>
+          <h2 className="font-display text-3xl md:text-4xl text-ink font-bold">Current Opportunities</h2>
+          <p className="text-charcoal-500 text-sm mt-3 font-medium">Explore roles that match your skillset and passion.</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {roles.map((role) => {
+            // Custom department colors
+            let deptColor = "bg-blue-50 text-blue-700 border-blue-100";
+            if (role.department === "Content") deptColor = "bg-emerald-50 text-emerald-700 border-emerald-100";
+            if (role.department === "Design") deptColor = "bg-indigo-50 text-indigo-700 border-indigo-100";
+            if (role.department === "Production") deptColor = "bg-amber-50 text-amber-700 border-amber-100";
+            if (role.department === "PR") deptColor = "bg-rose-50 text-rose-700 border-rose-100";
+            if (role.department === "Tech") deptColor = "bg-sky-50 text-sky-700 border-sky-100";
+            if (role.department === "Operations") deptColor = "bg-violet-50 text-violet-700 border-violet-100";
+
+            return (
+              <div
+                key={role.id}
+                className="bg-paper border border-charcoal-100 rounded-3xl p-8 shadow-sm hover:shadow-xl hover:border-teal-accent/30 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${deptColor}`}>
+                      {role.department}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-mist text-charcoal-600 border border-charcoal-200 px-3 py-1 rounded-full">
+                      {role.type}
+                    </span>
+                  </div>
+                  <h3 className="font-display text-2xl font-bold text-ink mb-4 group-hover:text-teal-accent transition-colors">
+                    {role.title}
+                  </h3>
+                  <p className="text-xs text-charcoal-600 leading-relaxed mb-6 font-medium">
+                    {role.description}
+                  </p>
+
+                  <div className="w-full h-px bg-charcoal-100 mb-6" />
+
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-charcoal-450 mb-3.5">
+                    Requirements
+                  </p>
+                  <ul className="space-y-2.5 mb-8">
+                    {role.requirements.map(req => (
+                      <li key={req} className="flex items-start gap-2.5">
+                        <span className="shrink-0 w-4.5 h-4.5 rounded-full bg-teal-accent/10 text-teal-accent flex items-center justify-center p-0.5 mt-0.5">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <span className="text-xs text-charcoal-700 font-medium leading-normal">{req}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="pt-4 border-t border-charcoal-100 mt-auto">
+                  <Link
+                    href={`/careers/apply?role=${role.id}`}
+                    className="btn-accent w-full py-3 text-center block text-xs font-bold tracking-wider uppercase rounded-full shadow-sm hover:shadow-md transition-all"
+                  >
+                    Apply for this Role
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Section>
+
+      {/* General Applications CTA */}
+      <section className="bg-ink relative overflow-hidden">
+        {/* Decorative background gradients */}
+        <div className="absolute inset-0 bg-gradient-to-r from-ink via-[#13224f] to-ink pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-teal-accent/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="container-grid py-24 relative z-10 text-center max-w-3xl mx-auto">
+          <p className="text-teal-accent text-xs font-bold tracking-widest uppercase mb-4">Don't see your role?</p>
+          <h2 className="font-display text-4xl text-paper font-bold mb-6 tracking-tight">We are always open to exceptional talent.</h2>
+          <p className="text-sm text-navy-200 leading-relaxed mb-10 max-w-2xl mx-auto font-medium">
+            If you are genuinely good at what you do and want to be part of a growing creative agency, drop us your details and portfolio. We review general applications weekly.
+          </p>
+          <Link href="/careers/apply?role=General" className="btn-accent inline-flex items-center gap-2 px-8 py-4 text-sm font-semibold rounded-full shadow-lg shadow-teal-accent/20 hover:-translate-y-0.5 active:translate-y-0 hover:shadow-teal-accent/30 transition-all group">
+            Send Your Portfolio
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">
+              <path d="M3 8h10M9 4l4 4-4 4"/>
+            </svg>
+          </Link>
         </div>
       </section>
     </>

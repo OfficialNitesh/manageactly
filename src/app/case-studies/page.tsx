@@ -81,7 +81,7 @@ export default function CaseStudiesPage() {
             <p className="label text-charcoal-400 mb-5">Our Work</p>
             <h1 className="font-display text-5xl md:text-6xl text-ink leading-tight mb-6">Results we aim for.</h1>
             <p className="text-xl text-charcoal-600 leading-relaxed max-w-2xl">
-              These are the types of results our approach delivers. Every brand situation is different — this is how we think and what we work towards.
+              These are the types of results our approach delivers. Every brand situation is different, but this is how we think and what we work towards.
             </p>
           </div>
         </div>

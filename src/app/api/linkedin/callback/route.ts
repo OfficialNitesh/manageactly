@@ -3,6 +3,8 @@
 // Exchanges authorization code for tokens, fetches profile, stores connection.
 
 import { NextResponse } from "next/server";
+
+export const dynamic = 'force-dynamic';
 import {
   exchangeLinkedInCode,
   getLinkedInProfile,

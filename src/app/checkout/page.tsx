@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 
@@ -15,7 +15,7 @@ interface CheckoutState {
   error?: string;
 }
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -126,7 +126,6 @@ export default function CheckoutPage() {
               value={generateQRValue()}
               size={200}
               level="H"
-              includeMargin={true}
               fgColor="#000000"
               bgColor="#ffffff"
             />
@@ -260,5 +259,17 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-emerald-600"></div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }

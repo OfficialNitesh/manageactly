@@ -91,7 +91,7 @@ export async function sendContactEmails(d: ContactData) {
         <p style="color:#555;margin-top:28px;">Warm regards,<br><strong>Manage Actly Team</strong></p>
         <div style="margin-top:40px;padding-top:16px;border-top:1px solid #e5e5e0;">
           <p style="font-size:12px;color:#999;margin:0;">
-            manageactly.in &nbsp;·&nbsp; hello@manageactly.in
+            manageactly.in &nbsp;·&nbsp; realofficialcreator@gmail.com
           </p>
         </div>
       </div>
@@ -165,11 +165,11 @@ export async function sendCareerEmails(d: CareerData) {
         </div>
         <p style="color:#555;line-height:1.7;">
           Questions? Write to
-          <a href="mailto:careers@manageactly.in" style="color:#2a9d8f;">careers@manageactly.in</a>
+          <a href="mailto:realofficialcreator@gmail.com" style="color:#2a9d8f;">realofficialcreator@gmail.com</a>
         </p>
         <p style="color:#555;margin-top:28px;">Warm regards,<br><strong>Manage Actly Team</strong></p>
         <div style="margin-top:40px;padding-top:16px;border-top:1px solid #e5e5e0;">
-          <p style="font-size:12px;color:#999;margin:0;">manageactly.in &nbsp;·&nbsp; careers@manageactly.in</p>
+          <p style="font-size:12px;color:#999;margin:0;">manageactly.in &nbsp;·&nbsp; realofficialcreator@gmail.com</p>
         </div>
       </div>
     `,
@@ -239,7 +239,7 @@ export async function sendPaymentEmails(d: PaymentData) {
         </p>
         <p style="color:#555;line-height:1.7;margin-top:12px;">
           Questions? Write to
-          <a href="mailto:hello@manageactly.in" style="color:#2a9d8f;">hello@manageactly.in</a>
+          <a href="mailto:realofficialcreator@gmail.com" style="color:#2a9d8f;">realofficialcreator@gmail.com</a>
         </p>
         <p style="color:#555;margin-top:28px;">Warm regards,<br><strong>Manage Actly Team</strong></p>
       </div>
@@ -332,7 +332,7 @@ export async function sendApplicantConfirmationEmail(d: ApplicantData) {
         </p>
         <p style="color:#555;line-height:1.7;">
           Questions? Write to
-          <a href="mailto:careers@manageactly.in" style="color:#2a9d8f;">careers@manageactly.in</a>
+          <a href="mailto:realofficialcreator@gmail.com" style="color:#2a9d8f;">realofficialcreator@gmail.com</a>
         </p>
         <p style="color:#555;margin-top:28px;">Warm regards,<br><strong>Manage Actly Team</strong></p>
       </div>
@@ -353,6 +353,65 @@ export async function sendApplicantConfirmationEmail(d: ApplicantData) {
             <tr><td style="color:#888;padding:6px 12px 6px 0;">Email</td><td style="padding:6px 0;"><a href="mailto:${d.email}" style="color:#2a9d8f;">${d.email}</a></td></tr>
             <tr><td style="color:#888;padding:6px 12px 6px 0;">Applied</td><td style="padding:6px 0;">${d.appliedAt.toLocaleDateString()}</td></tr>
           </table>
+        </div>
+      `,
+    });
+  }
+}
+
+// ── Portfolio submission emails ─────────────────────────────────────────────
+
+interface PortfolioSubmissionData {
+  name: string;
+  email: string;
+  portfolioUrl: string;
+  message?: string;
+}
+
+export async function sendPortfolioSubmissionEmail(d: PortfolioSubmissionData) {
+  const notifyEmail = process.env.CAREERS_NOTIFY_EMAIL || process.env.GMAIL_USER || "realofficialcreator@gmail.com";
+
+  // 1. Confirmation to submitter
+  await sendEmail({
+    to: d.email,
+    subject: "Portfolio Submission Received — Manage Actly",
+    html: `
+      <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:40px 24px;color:#1a1a2e;">
+        <p style="font-size:20px;font-weight:bold;margin-bottom:28px;">Manage Actly</p>
+        <h1 style="font-size:22px;margin-bottom:16px;">Portfolio Submission Received</h1>
+        <p style="color:#555;line-height:1.7;margin-bottom:14px;">Hi ${d.name},</p>
+        <p style="color:#555;line-height:1.7;margin-bottom:14px;">
+          Thank you for sharing your portfolio with Manage Actly. We have successfully received your submission.
+        </p>
+        <div style="background:#f5f5f0;border-radius:12px;padding:18px 22px;margin:24px 0;">
+          <p style="margin:4px 0;font-size:14px;"><strong>Name:</strong> ${d.name}</p>
+          <p style="margin:4px 0;font-size:14px;"><strong>Portfolio URL:</strong> <a href="${d.portfolioUrl}" style="color:#2a9d8f;">${d.portfolioUrl}</a></p>
+        </div>
+        <p style="color:#555;line-height:1.7;">
+          Our creative team will review your work and reach out if there is a matching opportunity.
+        </p>
+        <p style="color:#555;margin-top:28px;">Warm regards,<br><strong>Manage Actly Team</strong></p>
+        <div style="margin-top:40px;padding-top:16px;border-top:1px solid #e5e5e0;">
+          <p style="font-size:12px;color:#999;margin:0;">manageactly.in &nbsp;·&nbsp; realofficialcreator@gmail.com</p>
+        </div>
+      </div>
+    `,
+  });
+
+  // 2. Notification to admin
+  if (notifyEmail) {
+    await sendEmail({
+      to: notifyEmail,
+      subject: `New Portfolio Submission: ${d.name}`,
+      html: `
+        <div style="font-family:monospace;max-width:520px;padding:28px 24px;color:#1a1a2e;">
+          <h2 style="font-size:16px;margin-bottom:16px;">New Portfolio Submission</h2>
+          <table style="font-size:14px;border-collapse:collapse;">
+            <tr><td style="color:#888;padding:6px 12px 6px 0;width:120px;">Name</td><td style="padding:6px 0;"><strong>${d.name}</strong></td></tr>
+            <tr><td style="color:#888;padding:6px 12px 6px 0;">Email</td><td style="padding:6px 0;"><a href="mailto:${d.email}" style="color:#2a9d8f;">${d.email}</a></td></tr>
+            <tr><td style="color:#888;padding:6px 12px 6px 0;">Portfolio</td><td style="padding:6px 0;"><a href="${d.portfolioUrl}" style="color:#2a9d8f;">${d.portfolioUrl}</a></td></tr>
+          </table>
+          ${d.message ? `<div style="margin-top:16px;padding:12px 16px;background:#f5f5f0;border-radius:8px;"><p style="font-size:12px;color:#888;margin:0 0 6px;font-weight:bold;text-transform:uppercase;letter-spacing:.05em;">Message / Info</p><p style="font-size:14px;color:#333;margin:0;line-height:1.6;">${d.message}</p></div>` : ""}
         </div>
       `,
     });
