@@ -11,6 +11,8 @@ const staticRoutes = [
   "/about",
   "/careers",
   "/contact",
+  "/privacy",
+  "/terms",
 ];
 
 const insightSlugs = [
